@@ -6,9 +6,8 @@
 */
 
 // Dependencies
-const http = require('http');
-const url = require('url');
-const {StringDecoder} = require('string_decoder');
+const http = require('http')
+const {handleReqRes} = require('./helper/handleReqRes')
 
 // Module Scaffolding
 const app = {};
@@ -28,37 +27,8 @@ app.createServer = (callback)=> {
     })
 }
 
-
 // Handle Request Response
-app.handleRequestResponse = (req, res)=> {
-    // Parse Request URL
-    const parsedUrl = url.parse(req.url, true);
-    // Get Path
-    const path = (parsedUrl.pathname).replace(/^\/+|\/+$/g, '');
-    // Get Query String
-    const queryStringObject = parsedUrl.query;
-    // Get HTTP Method
-    const method = req.method.toLowerCase();
-    // Get Headers
-    const headers = req.headers;
-    // Get Payload & Decode
-    const decoder = new StringDecoder('utf-8');
-    let body = '';
-
-    // Listen Data Event on Request
-    req.on('data', (buffer)=> {
-        body += decoder.write(buffer);
-    })
-    // Listen End Event on Request
-    req.on('end', ()=> {
-        body += decoder.end();
-        // Make Request Body to Json
-        const json = JSON.parse(body.replace(/\r\n/g,''))
-        console.log({json, body, path, queryStringObject, method, headers})
-        res.end("Hello World")
-    })
-}
-
+app.handleRequestResponse = handleReqRes;
 
 // Start Server
 app.createServer(app.handleRequestResponse);
