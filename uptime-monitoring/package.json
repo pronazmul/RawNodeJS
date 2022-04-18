@@ -1,12 +1,11 @@
 {
-  "name": "raw-node-api-project",
+  "name": "uptime-monitoring",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Restfull API Web URL Uptime Monitoring Application.",
+  "main": "server.js",
   "scripts": {
-    "start": "nodemon index",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Nazmul HUda",
+  "author": "Nazmul Huda",
   "license": "ISC"
 }
