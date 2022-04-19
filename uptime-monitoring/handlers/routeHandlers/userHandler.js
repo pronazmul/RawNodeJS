@@ -11,6 +11,7 @@ const handlr = {}
 handlr.userHandler = (requestProperties, callback)=>{
 
     callback(200, {
+        ...requestProperties,
         "message": "Welcome from User Hanler"
     })
 }

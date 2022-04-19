@@ -25,6 +25,10 @@ handler.handleReqRes = (req, res)=> {
     const method = req.method.toLowerCase();
     // Get Headers
     const headers = req.headers;
+
+    //Chose Desired Handler By URL Path
+    const chosedHandler = routes[path]? routes[path]: notFoundHanler
+
     // Get Payload & Decode
     const decoder = new StringDecoder('utf-8');
     let body = '';
@@ -38,22 +42,21 @@ handler.handleReqRes = (req, res)=> {
         body += decoder.end();
         // Make Request Body to Json
         const json = JSON.parse(body.replace(/\r\n/g,''))
+
+        // All Req Object together
+        const requestObject = {path, queryString, method, headers, body:json}
+
+        // Invode Desired Handler
+        chosedHandler(requestObject, (statusCode, payload)=>{
+            let code = typeof statusCode ==='number'? statusCode : 500;
+            let data = typeof payload === 'object'? payload : {}
+
+            res.writeHead(code)
+            res.end(JSON.stringify(data))
+        })
     })
 
-    // All Req Object together
-    const requestObject = {path, queryString, method, headers}
 
-    //Chose Desired Handler By URL Path
-    const chosedHandler = routes[path]? routes[path]: notFoundHanler
-
-    // Invode Desired Handler
-    chosedHandler(requestObject, (statusCode, payload)=>{
-        let code = typeof statusCode ==='number'? statusCode : 500;
-        let data = typeof payload === 'object'? payload : {}
-
-        res.writeHead(code)
-        res.end(JSON.stringify(data))
-    })
 
 
 
