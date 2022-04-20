@@ -16,7 +16,7 @@ const lib = {}
 lib.baseUrl = path.join(__dirname, './../.data/')
 
 lib.create = (subdir, filename, data, callback) => {
-  //Create new file if not exists
+  //Create new file if not exists `wx` mode comfirms if exists create error
   fs.open(
     lib.baseUrl + subdir + '/' + filename + '.json',
     'wx',
@@ -92,6 +92,20 @@ lib.delete = (subdir, file, callback) => {
       callback('Error Deleting, File Does not exist')
     }
   })
+}
+
+lib.exists = (subdir, file, callback) => {
+  fs.access(
+    lib.baseUrl + subdir + '/' + file + '.json',
+    fs.constants.F_OK,
+    (err) => {
+      if (err) {
+        callback(false)
+      } else {
+        callback(true)
+      }
+    }
+  )
 }
 
 // Module Export
