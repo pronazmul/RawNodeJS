@@ -8,7 +8,6 @@
 
 const db = require('../../lib/data')
 const {
-  makeHash,
   jsonStringToObject,
   randomStringGenerator,
 } = require('../../helper/utilities')
@@ -27,34 +26,32 @@ handlr.checkHandler = (requestProperties, callback) => {
     })
   }
 }
-
 handlr._check = {}
 
 handlr._check.get = (requestObject, callback) => {
-  let { phone } = requestObject.query
-  phone = phone && phone.length === 11 ? phone : false
-  if (phone) {
-    // Verify Token
-    let token = requestObject.headers.token
-      ? requestObject.headers.token
-      : false
-    tokenVerifier(token, phone, (verified) => {
-      if (verified) {
-        db.read('users', phone, (err, data) => {
-          if (!err && data) {
-            let user = jsonStringToObject(data)
-            delete user.password
-            callback(200, user)
+  // Lookup the check by id
+  let id = requestObject.query.id ? requestObject.query.id : false
+  if (id) {
+    db.read('checks', id, (err, data) => {
+      if (!err && data) {
+        let check = jsonStringToObject(data)
+        // Verify Token
+        let token = requestObject.headers.token
+          ? requestObject.headers.token
+          : false
+        tokenVerifier(token, check.userPhone, (verified) => {
+          if (verified) {
+            callback(200, check)
           } else {
-            callback(404, { error: 'Requested User Not Found' })
+            callback(403, { error: 'Authentication Failed' })
           }
         })
       } else {
-        callback(403, { error: 'Authentication Failed' })
+        callback(404, { error: 'Check Not Found' })
       }
     })
   } else {
-    callback(400, { error: 'Invalid Phone Number' })
+    callback(400, { error: 'There was a Problem in your request!' })
   }
 }
 handlr._check.post = (requestObject, callback) => {
@@ -134,38 +131,59 @@ handlr._check.post = (requestObject, callback) => {
   }
 }
 handlr._check.put = (requestObject, callback) => {
-  let { firstName, lastName, phone, password } = requestObject.body
-  firstName = firstName ? firstName.trim() : false
-  lastName = lastName ? lastName.trim() : false
-  phone = phone && phone.length === 11 ? phone : false
-  password = password ? password.trim() : false
-  if (phone && (firstName || lastName || password)) {
-    // Verify Token
-    let token = requestObject.headers.token
-      ? requestObject.headers.token
+  let token = requestObject.headers.token ? requestObject.headers.token : false
+  let { id, protocol, url, method, successCodes, timeoutSecond } =
+    requestObject.body
+  id = id ? id : false
+  protocol = protocol && typeof protocol === 'string' ? protocol.trim() : false
+  url = url && typeof url === 'string' ? url.trim() : false
+  method = method && typeof method === 'string' ? method.trim() : false
+  successCodes =
+    successCodes && Array.isArray(successCodes) ? successCodes : false
+  timeoutSecond =
+    timeoutSecond &&
+    typeof timeoutSecond === 'number' &&
+    timeoutSecond >= 1 &&
+    timeoutSecond <= 5
+      ? timeoutSecond
       : false
-    tokenVerifier(token, phone, (verified) => {
-      if (verified) {
-        // Lookup the user
-        db.read('users', phone, (err, data) => {
-          if (!err && data) {
-            let user = jsonStringToObject(data)
-            user.firstName = firstName ? firstName : user.firstName
-            user.lastName = lastName ? lastName : user.lastName
-            user.password = password ? makeHash(password) : user.password
-            db.update('users', phone, user, (err) => {
+
+  if (
+    id &&
+    token &&
+    (protocol || url || method || successCodes || timeoutSecond)
+  ) {
+    //Lookup the check
+    db.read('checks', id, (err, data) => {
+      if (!err && data) {
+        let check = jsonStringToObject(data)
+        //Verify Token
+        tokenVerifier(token, check.userPhone, (verified) => {
+          if (verified) {
+            //Update the check
+            check.protocol = protocol ? protocol : check.protocol
+            check.url = url ? url : check.url
+            check.method = method ? method : check.method
+            check.successCodes = successCodes
+              ? successCodes
+              : check.successCodes
+            check.timeoutSecond = timeoutSecond
+              ? timeoutSecond
+              : check.timeoutSecond
+
+            db.update('checks', id, check, (err) => {
               if (!err) {
-                callback(200, { message: 'User Updated Successfully' })
+                callback(200, check)
               } else {
-                callback(500, { error: 'Failed To Update User' })
+                callback(500, { error: 'Failed to update check' })
               }
             })
           } else {
-            callback(404, { error: 'Requested User Not Found' })
+            callback(403, { error: 'Authentication Failed' })
           }
         })
       } else {
-        callback(403, { error: 'Authentication Failed' })
+        callback(403, { error: 'Authentication Failed!' })
       }
     })
   } else {
@@ -173,35 +191,51 @@ handlr._check.put = (requestObject, callback) => {
   }
 }
 handlr._check.delete = (requestObject, callback) => {
-  let { phone } = requestObject.query
-  phone = phone && phone.length === 11 ? phone : false
-  if (phone) {
-    // Verify Token
-    let token = requestObject.headers.token
-      ? requestObject.headers.token
-      : false
-    tokenVerifier(token, phone, (verified) => {
-      if (verified) {
-        // Look up the user
-        db.read('users', phone, (err, data) => {
-          if (!err && data) {
-            db.delete('users', phone, (err) => {
+  let token = requestObject.headers.token ? requestObject.headers.token : false
+  let id = requestObject.query.id ? requestObject.query.id : false
+  // Lookup the check by id
+  if (id) {
+    db.read('checks', id, (err, data) => {
+      if (!err && data) {
+        let check = jsonStringToObject(data)
+        // Verify Token
+        tokenVerifier(token, check.userPhone, (verified) => {
+          if (verified) {
+            // Delete Check
+            db.delete('checks', id, (err) => {
               if (!err) {
-                callback(200, { message: 'User Deleted Successfully' })
+                // Delete the check from the user's object
+                db.read('users', check.userPhone, (err, data) => {
+                  if (!err && data) {
+                    let userData = jsonStringToObject(data)
+                    let { checks = [] } = userData
+                    // Remove the check from the user's object
+                    userData.checks = checks.filter((checkId) => checkId !== id)
+                    db.update('users', check.userPhone, userData, (err) => {
+                      if (!err) {
+                        callback(200, { success: 'Check Deleted' })
+                      } else {
+                        callback(500, { error: 'Failed to update user' })
+                      }
+                    })
+                  } else {
+                    callback(500, { error: 'Failed to delete check' })
+                  }
+                })
               } else {
-                callback(500, { error: 'Failed To Delete User' })
+                callback(500, { error: 'Failed to delete check' })
               }
             })
           } else {
-            callback(404, { error: 'Requested User Not Found' })
+            callback(403, { error: 'Authentication Failed' })
           }
         })
       } else {
-        callback(403, { error: 'Authentication Failed' })
+        callback(404, { error: 'Check Not Found' })
       }
     })
   } else {
-    callback(400, { error: 'Invalid Phone Number' })
+    callback(400, { error: 'There was a Problem in your request!' })
   }
 }
 
