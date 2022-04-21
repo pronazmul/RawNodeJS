@@ -1,1 +1,8 @@
-{"firstName":"Nazmul","lastName":"Huda","phone":"01746888130","password":"a44879171d4f97d87f330d26f540e71db66e4222d90165ac3f710eec82981a9a","tosAgreement":true}
+{
+  "firstName": "Nazmul",
+  "lastName": "Huda",
+  "phone": "01746888130",
+  "password": "a44879171d4f97d87f330d26f540e71db66e4222d90165ac3f710eec82981a9a",
+  "tosAgreement": true,
+  "checks": ["mfSQQqXR6FAdj4U1ZHY7", "WORr3hUGUovt1V7mrnzZ"]
+}
