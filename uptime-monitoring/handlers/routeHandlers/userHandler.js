@@ -8,6 +8,7 @@
 
 const db = require('../../lib/data')
 const { makeHash, jsonStringToObject } = require('../../helper/utilities')
+const { tokenVerifier } = require('./tokenHandler')
 
 // Module Scaffolding
 const handlr = {}
@@ -29,13 +30,23 @@ handlr._user.get = (requestObject, callback) => {
   let { phone } = requestObject.query
   phone = phone && phone.length === 11 ? phone : false
   if (phone) {
-    db.read('users', phone, (err, data) => {
-      if (!err && data) {
-        let user = jsonStringToObject(data)
-        delete user.password
-        callback(200, user)
+    // Verify Token
+    let token = requestObject.headers.token
+      ? requestObject.headers.token
+      : false
+    tokenVerifier(token, phone, (verified) => {
+      if (verified) {
+        db.read('users', phone, (err, data) => {
+          if (!err && data) {
+            let user = jsonStringToObject(data)
+            delete user.password
+            callback(200, user)
+          } else {
+            callback(404, { error: 'Requested User Not Found' })
+          }
+        })
       } else {
-        callback(404, { error: 'Requested User Not Found' })
+        callback(403, { error: 'Authentication Failed' })
       }
     })
   } else {
@@ -86,21 +97,32 @@ handlr._user.put = (requestObject, callback) => {
   phone = phone && phone.length === 11 ? phone : false
   password = password ? password.trim() : false
   if (phone && (firstName || lastName || password)) {
-    db.read('users', phone, (err, data) => {
-      if (!err && data) {
-        let user = jsonStringToObject(data)
-        user.firstName = firstName ? firstName : user.firstName
-        user.lastName = lastName ? lastName : user.lastName
-        user.password = password ? makeHash(password) : user.password
-        db.update('users', phone, user, (err) => {
-          if (!err) {
-            callback(200, { message: 'User Updated Successfully' })
+    // Verify Token
+    let token = requestObject.headers.token
+      ? requestObject.headers.token
+      : false
+    tokenVerifier(token, phone, (verified) => {
+      if (verified) {
+        // Lookup the user
+        db.read('users', phone, (err, data) => {
+          if (!err && data) {
+            let user = jsonStringToObject(data)
+            user.firstName = firstName ? firstName : user.firstName
+            user.lastName = lastName ? lastName : user.lastName
+            user.password = password ? makeHash(password) : user.password
+            db.update('users', phone, user, (err) => {
+              if (!err) {
+                callback(200, { message: 'User Updated Successfully' })
+              } else {
+                callback(500, { error: 'Failed To Update User' })
+              }
+            })
           } else {
-            callback(500, { error: 'Failed To Update User' })
+            callback(404, { error: 'Requested User Not Found' })
           }
         })
       } else {
-        callback(404, { error: 'Requested User Not Found' })
+        callback(403, { error: 'Authentication Failed' })
       }
     })
   } else {
@@ -111,17 +133,28 @@ handlr._user.delete = (requestObject, callback) => {
   let { phone } = requestObject.query
   phone = phone && phone.length === 11 ? phone : false
   if (phone) {
-    db.read('users', phone, (err, data) => {
-      if (!err && data) {
-        db.delete('users', phone, (err) => {
-          if (!err) {
-            callback(200, { message: 'User Deleted Successfully' })
+    // Verify Token
+    let token = requestObject.headers.token
+      ? requestObject.headers.token
+      : false
+    tokenVerifier(token, phone, (verified) => {
+      if (verified) {
+        // Look up the user
+        db.read('users', phone, (err, data) => {
+          if (!err && data) {
+            db.delete('users', phone, (err) => {
+              if (!err) {
+                callback(200, { message: 'User Deleted Successfully' })
+              } else {
+                callback(500, { error: 'Failed To Delete User' })
+              }
+            })
           } else {
-            callback(500, { error: 'Failed To Delete User' })
+            callback(404, { error: 'Requested User Not Found' })
           }
         })
       } else {
-        callback(404, { error: 'Requested User Not Found' })
+        callback(403, { error: 'Authentication Failed' })
       }
     })
   } else {

@@ -1,15 +1,18 @@
 /*
-* Title: Route Handler
-* Description: Application All Route Handler. 
-* Author: Nazmul Huda
-* Date: 18/04/2022
-*/
+ * Title: Route Handler
+ * Description: Application All Route Handler.
+ * Author: Nazmul Huda
+ * Date: 18/04/2022
+ */
 
 // Dependencies
-const {userHandler} = require('./handlers/routeHandlers/userHandler');
+const { userHandler } = require('./handlers/routeHandlers/userHandler')
+const { tokenHandler } = require('./handlers/routeHandlers/tokenHandler')
 
+// Module Scaffolding
 const routes = {
-user: userHandler,
+  user: userHandler,
+  token: tokenHandler,
 }
 
 // Export Module
