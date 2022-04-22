@@ -58,13 +58,5 @@ notification.sendTwlioMessage = (phone, msg, callback) => {
   }
 }
 
-notification.sendTwlioMessage('01746888130', 'Hello World', (err, data) => {
-  if (err) {
-    console.log(err)
-  } else {
-    console.log('SMS Send Successfully')
-  }
-})
-
 // Export Module
 module.exports = notification

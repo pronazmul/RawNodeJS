@@ -108,5 +108,16 @@ lib.exists = (subdir, file, callback) => {
   )
 }
 
+lib.list = (subdir, callback) => {
+  fs.readdir(lib.baseUrl + subdir + '/', (error, fileNames) => {
+    if (!error && fileNames && fileNames.length > 0) {
+      let trimmedNames = fileNames.map((name) => name.replace('.json', ''))
+      callback(false, trimmedNames)
+    } else {
+      callback('No Files Found', false)
+    }
+  })
+}
+
 // Module Export
 module.exports = lib
