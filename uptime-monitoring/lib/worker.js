@@ -11,7 +11,7 @@ const https = require('https')
 const { parse } = require('url')
 const db = require('./data')
 const { jsonStringToObject } = require('../helper/utilities')
-const { sendTwlioMessage } = require('../helper/notification')
+const { sendTwlioMessage, sendMail } = require('../helper/notification')
 
 // SCAFFOLDING
 const worker = {}
@@ -126,7 +126,7 @@ worker.requestOutcome = (checkObject, outcome) => {
       : 'down'
 
   // //NOTIFICATION WANTED OR NOT
-  const notificationWanted = Boolean(
+  const notificationWanted = !!(
     checkObject.lastChecked && checkObject.status !== status
   )
 
@@ -138,9 +138,16 @@ worker.requestOutcome = (checkObject, outcome) => {
   db.update('checks', checkObject.id, checkObject, (error) => {
     if (!error) {
       if (notificationWanted) {
+        worker.notificationSender(checkObject)
       } else {
         console.log(
-          `Notification is not wanted for ${checkObject.url} - State Not Changed, Currently ${status}`
+          status === 'up'
+            ? `Your Website ${checkObject.url
+                .split('.')[0]
+                .toUpperCase()} is up and Running!`
+            : `Your Website ${checkObject.url
+                .split('.')[0]
+                .toUpperCase()} is down !`
         )
       }
     } else {
@@ -156,13 +163,27 @@ worker.notificationSender = (checkResult) => {
   }://${checkResult.url} is currently ${checkResult.status}`
 
   //SEND NOTIFICATION USING TWLIO
-  sendTwlioMessage(checkResult.userPhone, message, (error) => {
-    if (!error) {
-      console.log('A message has beed send to user')
-    } else {
-      console.log('Error: Problem ocurred while sending request!')
+  // sendTwlioMessage(checkResult.userPhone, message, (error) => {
+  //   if (!error) {
+  //     console.log('A message has beed send to user')
+  //   } else {
+  //     console.log('Error: Problem ocurred while sending request!')
+  //   }
+  // })
+
+  //SEND NOTIFICATION USING NodeMailer
+  sendMail(
+    'developernazmul@gmail.com',
+    'Coast Guard Application State',
+    message,
+    (err, data) => {
+      if (err) {
+        console.log(err)
+      } else {
+        console.log(data)
+      }
     }
-  })
+  )
 }
 
 // RUN THIS PROCESS CONTINOUSLY EACH 30 SEC

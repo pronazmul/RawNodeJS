@@ -8,10 +8,12 @@
 // Dependencies
 const https = require('https')
 const { twlio } = require('./environments')
+const nodeMailer = require('nodemailer')
 
 // Module Scaffolding
 const notification = {}
 
+//SEND SMS BY TWILIO
 notification.sendTwlioMessage = (phone, msg, callback) => {
   let number =
     typeof phone === 'string' && phone.trim().length === 11
@@ -55,6 +57,47 @@ notification.sendTwlioMessage = (phone, msg, callback) => {
     request.end()
   } else {
     callback('There was a problem with phone or message')
+  }
+}
+
+//SEND EMAIL BY NODEMAILER
+notification.sendMail = (email, subject, message, callback) => {
+  let mail =
+    typeof email === 'string' && email.trim().length > 0 ? email.trim() : false
+  let subject_ =
+    typeof subject === 'string' && subject.trim().length > 0
+      ? subject.trim()
+      : false
+  let message_ =
+    typeof message === 'string' && message.trim().length > 0
+      ? message.trim()
+      : false
+
+  if (mail && subject_ && message_) {
+    const transporter = nodeMailer.createTransport({
+      host: 'premium3.web-hosting.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: 'admin@pronazmul.com',
+        pass: 'Nazmul@01',
+      },
+    })
+    const mailOptions = {
+      from: 'admin@pronazmul.com',
+      to: mail,
+      subject: subject_,
+      text: message_,
+    }
+    transporter.sendMail(mailOptions, (err, info) => {
+      if (err) {
+        callback(err)
+      } else {
+        callback('Email send Successfully')
+      }
+    })
+  } else {
+    console.log('there was a problem with email or message')
   }
 }
 

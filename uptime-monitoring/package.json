@@ -8,5 +8,8 @@
     "build": "NODE_ENV=production node index.js"
   },
   "author": "Nazmul Huda",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "nodemailer": "^6.7.3"
+  }
 }

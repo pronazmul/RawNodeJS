@@ -1,1 +1,1 @@
-{"id":"HB76ieYPnGlbpvfpzMZh","userPhone":"01746888130","protocol":"http","url":"cgrpms.coastguard.gov.bd","method":"get","successCodes":[200,201,302,301],"timeoutSecond":2,"status":"up","lastChecked":1650656391602}
+{"id":"HB76ieYPnGlbpvfpzMZh","userPhone":"01746888130","protocol":"http","url":"cgrpms.coastguard.gov.bd","method":"get","successCodes":[200,201,301,302],"timeoutSecond":2,"status":"up","lastChecked":1650665701278}
