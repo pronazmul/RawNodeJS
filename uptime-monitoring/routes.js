@@ -15,6 +15,9 @@ const routes = {
   user: userHandler,
   token: tokenHandler,
   check: checkHandler,
+  test: (requestObject, callback) => {
+    callback(200, { message: 'This is from Test Route, Site is running' })
+  },
 }
 
 // Export Module

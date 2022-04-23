@@ -158,9 +158,17 @@ worker.requestOutcome = (checkObject, outcome) => {
 
 //SEND NOTIFICATION TO USER IF ANY STATE CHANGED
 worker.notificationSender = (checkResult) => {
-  const message = `Alert: your check for ${checkResult.method.toUpperCase()} ${
-    checkResult.protocol
-  }://${checkResult.url} is currently ${checkResult.status}`
+  const message =
+    checkResult.status === 'up'
+      ? `
+  Your Website ${checkResult.url.split('.')[0].toUpperCase()} is up and Running!
+  We are ovserbing your site each 1 minute, We will let you know if your site gets down.
+  `
+      : `
+  We are so sorry ${checkResult.url.split('.')[0].toUpperCase()} is Down!
+  Please contract to your system adminsitrator to fix this issue.
+  We are ovserbing your site each 1 minute, We will let you know if your site gets down.
+  `
 
   //SEND NOTIFICATION USING TWLIO
   // sendTwlioMessage(checkResult.userPhone, message, (error) => {
@@ -173,7 +181,7 @@ worker.notificationSender = (checkResult) => {
 
   //SEND NOTIFICATION USING NodeMailer
   sendMail(
-    'developernazmul@gmail.com',
+    'alimurdipu@gmail.com, developernazmul@gmail.com, it@coastguard.gov.bd',
     'Coast Guard Application State',
     message,
     (err, data) => {
@@ -190,7 +198,7 @@ worker.notificationSender = (checkResult) => {
 worker.loop = () => {
   setInterval(() => {
     worker.gatherAllChecks()
-  }, 1000 * 30)
+  }, 1000 * 60)
 }
 
 // START WORKER

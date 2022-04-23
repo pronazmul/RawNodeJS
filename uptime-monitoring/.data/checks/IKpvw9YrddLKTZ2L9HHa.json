@@ -1,1 +1,1 @@
-{"id":"IKpvw9YrddLKTZ2L9HHa","userPhone":"01746888130","protocol":"http","url":"coastguard.gov.bd","method":"get","successCodes":[200,201,302,301],"timeoutSecond":2,"status":"up","lastChecked":1650665702161}
+{"id":"IKpvw9YrddLKTZ2L9HHa","userPhone":"01746888130","protocol":"http","url":"coastguard.gov.bd","method":"get","successCodes":[200],"timeoutSecond":5,"status":"up","lastChecked":1650723200380}
